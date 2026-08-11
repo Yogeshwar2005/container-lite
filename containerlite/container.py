@@ -96,7 +96,8 @@ os.execvp(command[0], command)
 
         os.write(write_fd, b"1")
 
-        process.wait()
+        exit_code = process.wait()
+        return exit_code
 
     finally:
         os.close(read_fd)

@@ -31,7 +31,7 @@ def main():
     args = parser.parse_args()
 
     print("[ContainerLite] Starting container...")
-    create_container(
+    return create_container(
         args.command,
         memory_limit=args.memory,
         process_limit=args.pids,
