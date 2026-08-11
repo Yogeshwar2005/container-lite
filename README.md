@@ -423,18 +423,14 @@ exit
 ContainerLite cleans up the associated resources automatically.
 
 ---
-
 ## Technologies Used
 
-* **Python**
-* **Linux Namespaces**
-* **Linux cgroups v2**
-* **chroot**
-* **BusyBox**
-* **veth**
-* **Linux networking**
-* **subprocess / `unshare`**
-
+- **Python**
+- **Linux Namespaces** — Process, mount, hostname, and network isolation
+- **Linux cgroups v2** — CPU, memory, and process limits
+- **BusyBox** — Minimal container root filesystem
+- **Linux Networking** — Network namespaces and veth pairs
+- **chroot** — Filesystem isolation
 ---
 
 ## What I Learned
