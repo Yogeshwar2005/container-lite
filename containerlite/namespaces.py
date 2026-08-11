@@ -10,14 +10,14 @@ from containerlite.cgroups import (
 )
 
 
-def create_namespaces(command):
+def create_namespaces(command, memory_limit="100M", process_limit=20):
     rootfs = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "rootfs")
     )
 
     create_cgroup()
-    set_process_limit(20)
-    set_memory_limit("100M")
+    set_process_limit(process_limit)
+    set_memory_limit(memory_limit)
 
     def enter_cgroup():
         with open(
