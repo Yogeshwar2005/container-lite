@@ -7,12 +7,19 @@ def create_namespaces(command):
             "unshare",
             "--pid",
             "--fork",
-            "--mount-proc",
+            "--mount",
             "--uts",
             "sh",
             "-c",
-            "hostname containerlite && exec \"$@\"",
-            "containerlite",
+            """
+            mount --make-rprivate /
+            hostname containerlite
+            exec chroot rootfs /bin/sh -c '
+            /bin/busybox mount -t proc proc /proc
+            exec "$@"
+            ' -- "$@"
+            """,
+            "--",
             *command,
         ],
         check=True,
