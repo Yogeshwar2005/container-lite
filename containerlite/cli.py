@@ -1,6 +1,6 @@
 import argparse
 
-from .namespaces import create_namespaces
+from .container import create_container
 
 
 def main():
@@ -31,7 +31,7 @@ def main():
     args = parser.parse_args()
 
     print("[ContainerLite] Starting container...")
-    create_namespaces(
+    create_container(
         args.command,
         memory_limit=args.memory,
         process_limit=args.pids,
