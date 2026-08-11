@@ -1,13 +1,32 @@
 import os
 import subprocess
 
+from containerlite.cgroups import (
+    create_cgroup,
+    set_process_limit,
+    set_memory_limit,
+    remove_cgroup,
+    CGROUP_PATH,
+)
+
 
 def create_namespaces(command):
     rootfs = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "rootfs")
     )
 
-    subprocess.run(
+    create_cgroup()
+    set_process_limit(20)
+    set_memory_limit("100M")
+
+    def enter_cgroup():
+        with open(
+            os.path.join(CGROUP_PATH, "cgroup.procs"),
+            "w",
+        ) as f:
+            f.write(str(os.getpid()))
+
+    process = subprocess.Popen(
         [
             "unshare",
             "--pid",
@@ -21,9 +40,15 @@ import os
 import subprocess
 import sys
 
-subprocess.run(["mount", "--make-rprivate", "/"], check=True)
+subprocess.run(
+    ["mount", "--make-rprivate", "/"],
+    check=True,
+)
 
-subprocess.run(["hostname", "containerlite"], check=True)
+subprocess.run(
+    ["hostname", "containerlite"],
+    check=True,
+)
 
 rootfs = sys.argv[2]
 command = sys.argv[3:]
@@ -38,5 +63,10 @@ os.execvp(command[0], command)
             rootfs,
             *command,
         ],
-        check=True,
+        preexec_fn=enter_cgroup,
     )
+
+    try:
+        process.wait()
+    finally:
+        remove_cgroup()
