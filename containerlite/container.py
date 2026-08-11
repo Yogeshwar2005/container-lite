@@ -10,6 +10,11 @@ from containerlite.cgroups import (
     CGROUP_PATH,
 )
 
+from containerlite.network import (
+    create_veth,
+    cleanup_network,
+)
+
 
 def create_container(command, memory_limit="100M", process_limit=20):
     rootfs = os.path.abspath(
@@ -20,6 +25,9 @@ def create_container(command, memory_limit="100M", process_limit=20):
     set_process_limit(process_limit)
     set_memory_limit(memory_limit)
     set_cpu_limit(50000)
+
+    read_fd, write_fd = os.pipe()
+
     def enter_cgroup():
         with open(
             os.path.join(CGROUP_PATH, "cgroup.procs"),
@@ -27,19 +35,26 @@ def create_container(command, memory_limit="100M", process_limit=20):
         ) as f:
             f.write(str(os.getpid()))
 
-    process = subprocess.Popen(
-        [
-            "unshare",
-            "--pid",
-            "--fork",
-            "--mount",
-            "--uts",
-            "python3",
-            "-c",
-            """
+    process = None
+
+    try:
+        process = subprocess.Popen(
+            [
+                "unshare",
+                "--pid",
+                "--fork",
+                "--mount",
+                "--net",
+                "--uts",
+                "python3",
+                "-c",
+                """
 import os
 import subprocess
 import sys
+
+ready_fd = int(os.environ["CONTAINERLITE_NETWORK_FD"])
+os.read(ready_fd, 1)
 
 subprocess.run(
     ["mount", "--make-rprivate", "/"],
@@ -51,6 +66,10 @@ subprocess.run(
     check=True,
 )
 
+from containerlite.network import configure_container_network
+
+configure_container_network()
+
 rootfs = sys.argv[2]
 command = sys.argv[3:]
 
@@ -60,14 +79,28 @@ setup_filesystem(rootfs)
 
 os.execvp(command[0], command)
 """,
-            "--",
-            rootfs,
-            *command,
-        ],
-        preexec_fn=enter_cgroup,
-    )
+                "--",
+                rootfs,
+                *command,
+            ],
+            env={
+                **os.environ,
+                "CONTAINERLITE_NETWORK_FD": str(read_fd),
+            },
+            pass_fds=(read_fd,),
+            preexec_fn=enter_cgroup,
+        )
 
-    try:
+        
+        create_veth(process.pid)
+
+        os.write(write_fd, b"1")
+
         process.wait()
+
     finally:
+        os.close(read_fd)
+        os.close(write_fd)
+
+        cleanup_network()
         remove_cgroup()
