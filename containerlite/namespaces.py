@@ -4,7 +4,7 @@ import subprocess
 
 def create_namespaces(command):
     rootfs = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "rootfs")
+        os.path.join(os.path.dirname(__file__), "..", "rootfs")
     )
 
     subprocess.run(
@@ -28,13 +28,9 @@ subprocess.run(["hostname", "containerlite"], check=True)
 rootfs = sys.argv[2]
 command = sys.argv[3:]
 
-os.chroot(rootfs)
-os.chdir("/")
+from containerlite.filesystem import setup_filesystem
 
-subprocess.run(
-    ["/bin/busybox", "mount", "-t", "proc", "proc", "/proc"],
-    check=True,
-)
+setup_filesystem(rootfs)
 
 os.execvp(command[0], command)
 """,
