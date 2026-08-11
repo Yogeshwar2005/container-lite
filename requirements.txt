@@ -1,0 +1,2 @@
+# ContainerLite has no third-party dependencies.
+# It uses Python's standard library and Linux kernel interfaces.
