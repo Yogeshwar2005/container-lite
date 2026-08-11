@@ -1,6 +1,6 @@
 import argparse
 
-from .namespaces import create_pid_namespace
+from .namespaces import create_namespaces
 
 
 def main():
@@ -18,7 +18,7 @@ def main():
     args = parser.parse_args()
 
     print("[ContainerLite] Starting container...")
-    create_pid_namespace(args.command)
+    create_namespaces(args.command)
 
 
 if __name__ == "__main__":
