@@ -84,7 +84,6 @@ container-lite/
 │   ├── __main__.py
 │   ├── cli.py
 │   ├── container.py
-│   ├── namespaces.py
 │   ├── filesystem.py
 │   ├── cgroups.py
 │   └── network.py
